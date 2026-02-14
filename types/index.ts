@@ -2,6 +2,12 @@ export type TaskPriority = "High" | "Medium" | "Low";
 export type TaskStatus = "Pending" | "In Progress" | "Completed";
 export type EventCategory = "Haldi" | "Mehendi" | "Wedding" | "Reception" | "General";
 
+export interface SubTask {
+    id: string;
+    title: string;
+    isCompleted: boolean;
+}
+
 export interface Task {
     id: string;
     title: string;
@@ -10,6 +16,8 @@ export interface Task {
     deadline?: Date;
     priority: TaskPriority;
     status: TaskStatus;
+    description?: string;
+    subtasks?: SubTask[];
 }
 
 export type GuestStatus = "Not Sent" | "Sent" | "Confirmed" | "Declined";
