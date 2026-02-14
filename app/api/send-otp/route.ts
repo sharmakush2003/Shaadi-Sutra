@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
-
-// In-memory OTP storage (resets on server restart)
-const otpStore = new Map<string, { otp: string; expiry: number }>();
+import { db } from '@/lib/firebase/config';
+import { doc, setDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
     try {
@@ -15,9 +14,13 @@ export async function POST(request: Request) {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Store OTP with 5-minute expiry
+        // Store OTP with 5-minute expiry in Firestore
         const expiry = Date.now() + 5 * 60 * 1000; // 5 minutes
-        otpStore.set(email, { otp, expiry });
+
+        await setDoc(doc(db, 'otps', email.toLowerCase()), {
+            otp,
+            expiry
+        });
 
         const emailUser = process.env.EMAIL_USER;
         const emailPass = process.env.EMAIL_PASS;
@@ -68,5 +71,3 @@ export async function POST(request: Request) {
     }
 }
 
-// Export the otpStore for use in verify-otp route
-export { otpStore };

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
-import { otpStore } from '../send-otp/route';
+import { db } from '@/lib/firebase/config';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
     try {
@@ -9,15 +10,18 @@ export async function POST(request: Request) {
             return NextResponse.json({ message: 'Email and OTP are required' }, { status: 400 });
         }
 
-        const storedData = otpStore.get(email);
+        const otpDocRef = doc(db, 'otps', email.toLowerCase());
+        const otpDoc = await getDoc(otpDocRef);
 
-        if (!storedData) {
+        if (!otpDoc.exists()) {
             return NextResponse.json({ message: 'No OTP found for this email', success: false }, { status: 400 });
         }
 
+        const storedData = otpDoc.data() as { otp: string; expiry: number };
+
         // Check if OTP has expired
         if (Date.now() > storedData.expiry) {
-            otpStore.delete(email);
+            await deleteDoc(otpDocRef);
             return NextResponse.json({ message: 'OTP has expired', success: false }, { status: 400 });
         }
 
@@ -27,7 +31,7 @@ export async function POST(request: Request) {
         }
 
         // OTP is valid - clear it from storage
-        otpStore.delete(email);
+        await deleteDoc(otpDocRef);
 
         return NextResponse.json({ message: 'OTP verified successfully', success: true });
     } catch (error: any) {
