@@ -6,6 +6,7 @@ import {
     User,
     GoogleAuthProvider,
     signInWithPopup,
+    signInAnonymously as firebaseSignInAnonymously,
     signOut as firebaseSignOut,
 } from "firebase/auth";
 import { doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
@@ -15,6 +16,7 @@ interface AuthContextType {
     user: User | null;
     loading: boolean;
     signInWithGoogle: () => Promise<void>;
+    signInAnonymously: () => Promise<void>;
     signOut: () => Promise<void>;
     sendAuthAlert: (user: User, type: 'login' | 'signup') => Promise<void>;
 }
@@ -56,7 +58,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const provider = new GoogleAuthProvider();
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
+        await handleUserAuth(user);
+    };
 
+    const signInAnonymously = async () => {
+        const result = await firebaseSignInAnonymously(auth);
+        const user = result.user;
+        await handleUserAuth(user);
+    };
+
+    const handleUserAuth = async (user: User) => {
         // Check if user exists in Firestore
         const userRef = doc(db, "users", user.uid);
         const userSnap = await getDoc(userRef);
@@ -64,16 +75,21 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (!userSnap.exists()) {
             await setDoc(userRef, {
                 uid: user.uid,
-                email: user.email,
-                displayName: user.displayName,
-                photoURL: user.photoURL,
+                email: user.email || null,
+                displayName: user.displayName || 'Guest User',
+                photoURL: user.photoURL || null,
                 createdAt: serverTimestamp(),
+                isAnonymous: user.isAnonymous,
             });
-            // New user -> Signup alert
-            await sendAuthAlert(user, 'signup');
+            // New user -> Signup alert (only if not anonymous or handle differently)
+            if (!user.isAnonymous) {
+                await sendAuthAlert(user, 'signup');
+            }
         } else {
             // Existing user -> Login alert
-            await sendAuthAlert(user, 'login');
+            if (!user.isAnonymous) {
+                await sendAuthAlert(user, 'login');
+            }
         }
     };
 
@@ -82,7 +98,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signOut, sendAuthAlert }}>
+        <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInAnonymously, signOut, sendAuthAlert }}>
             {children}
         </AuthContext.Provider>
     );

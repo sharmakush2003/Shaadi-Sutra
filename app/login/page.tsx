@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebase/config";
 
 export default function LoginPage() {
-    const { signInWithGoogle, sendAuthAlert } = useAuth();
+    const { signInWithGoogle, signInAnonymously, sendAuthAlert } = useAuth();
     const router = useRouter();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -111,6 +111,19 @@ export default function LoginPage() {
                         className="flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2"
                     >
                         Sign in with Google
+                    </button>
+                    <button
+                        onClick={async () => {
+                            try {
+                                await signInAnonymously();
+                                router.push("/");
+                            } catch (err: any) {
+                                setError(err.message);
+                            }
+                        }}
+                        className="mt-3 flex w-full justify-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2"
+                    >
+                        Continue as Guest
                     </button>
                 </div>
 

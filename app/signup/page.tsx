@@ -13,7 +13,7 @@ type SignupStep = 'email-entry' | 'otp-verification';
 
 export default function SignupPage() {
     const router = useRouter();
-    const { sendAuthAlert } = useAuth();
+    const { signInAnonymously, sendAuthAlert } = useAuth();
     const [step, setStep] = useState<SignupStep>('email-entry');
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -279,6 +279,22 @@ export default function SignupPage() {
                     </form>
                 )}
 
+                <div className="mt-4">
+                    <button
+                        onClick={async () => {
+                            try {
+                                await signInAnonymously();
+                                router.push("/");
+                            } catch (err: any) {
+                                setError(err.message);
+                            }
+                        }}
+                        className="flex w-full justify-center rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-[#d4af37] focus:ring-offset-2"
+                    >
+                        Continue as Guest
+                    </button>
+                </div>
+
                 <div className="mt-6 text-center text-sm">
                     <p className="text-gray-600">
                         Already have an account?{" "}
@@ -288,6 +304,6 @@ export default function SignupPage() {
                     </p>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }
