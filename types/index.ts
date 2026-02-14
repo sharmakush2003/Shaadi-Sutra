@@ -28,10 +28,11 @@ export interface Guest {
 export interface Room {
     id: string;
     roomNumber: string;
-    type: "Single" | "Double" | "Suite";
+    type: "Single" | "Double" | "Suite" | "Family";
     capacity: number;
     guestIds: string[];
-    status: "Available" | "Occupied" | "Reserved";
+    status: "Available" | "Occupied" | "Reserved" | "Maintenance";
+    emailSentAt?: string;
 }
 
 export interface Vendor {
